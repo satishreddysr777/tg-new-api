@@ -1,0 +1,1 @@
+ALTER TABLE "engagement_history" ALTER COLUMN "employee_id" DROP NOT NULL;
