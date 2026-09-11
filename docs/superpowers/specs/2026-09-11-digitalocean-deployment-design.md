@@ -150,9 +150,10 @@ pg_dump "$SUPABASE_DIRECT_URL" --data-only --schema=public \
 psql "$DO_DATABASE_URL" --single-transaction -v ON_ERROR_STOP=1 -f supabase-data.sql
 ```
 
-`--data-only` restores in dependency order and resets sequences. If a
-foreign-key cycle blocks the restore, the fallback is to edit the dump to
-defer constraints (`SET CONSTRAINTS ALL DEFERRED`) — noted in DEPLOY.md. The
+`--data-only` restores in dependency order and resets sequences (the FK
+graph is acyclic). If the restore ever fails on foreign-key ordering, the
+fallback is to re-dump with `pg_dump --disable-triggers` (tg_api owns the
+tables) — noted in DEPLOY.md. The
 seed (`db:seed`) is **not** run when copying data, since it would duplicate
 the demo tenant already present in the dump.
 
