@@ -711,7 +711,7 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 - Create: `tg-ui/Dockerfile`, `tg-ui/.dockerignore`
 
 **Interfaces:**
-- Produces: image that runs `node server.js` on `$PORT` (default 3000), built with build args `API_ORIGIN`, `JWT_SECRET`, `SESSION_COOKIE_NAME`. Task 8's spec references `dockerfile_path: Dockerfile` and passes those as BUILD_AND_RUN_TIME envs.
+- Produces: image that runs `node server.js` on `$PORT` (default 3000), built with build arg `API_ORIGIN` (the only build-time value; `JWT_SECRET` and `SESSION_COOKIE_NAME` are read by middleware at runtime — verified empirically). Task 8's spec references `dockerfile_path: Dockerfile`, passes `API_ORIGIN` as BUILD_AND_RUN_TIME and the other two as RUN_TIME.
 
 - [ ] **Step 1: Enable standalone output**
 
@@ -768,14 +768,11 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# ── 2. build (API_ORIGIN is baked into next.config rewrites here) ───────────
+# ── 2. build (API_ORIGIN is baked into next.config rewrites here;
+#      JWT_SECRET and SESSION_COOKIE_NAME are read at runtime) ───────────────
 FROM deps AS build
 ARG API_ORIGIN
-ARG JWT_SECRET
-ARG SESSION_COOKIE_NAME=tg_session
 ENV API_ORIGIN=$API_ORIGIN \
-    JWT_SECRET=$JWT_SECRET \
-    SESSION_COOKIE_NAME=$SESSION_COOKIE_NAME \
     NEXT_TELEMETRY_DISABLED=1
 COPY . .
 RUN npm run build
@@ -800,8 +797,7 @@ CMD ["node", "server.js"]
 
 ```bash
 cd /Users/satishreddy/Desktop/CurrentDevelopment/new/tg-ui
-docker build --build-arg API_ORIGIN=http://localhost:4000 \
-  --build-arg JWT_SECRET=local-placeholder-secret-0123456789 -t tg-ui:local .
+docker build --build-arg API_ORIGIN=http://localhost:4000 -t tg-ui:local .
 docker run -d --rm --name tg-ui-smoke -p 13000:3000 tg-ui:local
 sleep 3
 curl -sS -o /dev/null -w "%{http_code}\n" http://localhost:13000/login
@@ -830,7 +826,7 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 - Modify: `tg-ui/.env.production.example`
 
 **Interfaces:**
-- Consumes: Dockerfile build args from Task 7.
+- Consumes: Dockerfile build arg `API_ORIGIN` from Task 7 (`JWT_SECRET`/`SESSION_COOKIE_NAME` are runtime-only).
 - Produces: placeholders `${API_ORIGIN}`, `${JWT_SECRET}`. GitHub secrets `DIGITALOCEAN_ACCESS_TOKEN`, `JWT_SECRET`; variable `API_ORIGIN` (set in Task 11).
 
 - [ ] **Step 1: Write the spec**
@@ -867,16 +863,18 @@ services:
       - key: HOSTNAME
         value: 0.0.0.0
       # BUILD_AND_RUN_TIME envs are passed to `docker build` as --build-arg.
+      # API_ORIGIN is baked into next.config rewrites at build time.
       - key: API_ORIGIN
         value: ${API_ORIGIN}
         scope: BUILD_AND_RUN_TIME
+      # Read by middleware at runtime only — never needed during the build.
       - key: JWT_SECRET
         value: ${JWT_SECRET}
         type: SECRET
-        scope: BUILD_AND_RUN_TIME
+        scope: RUN_TIME
       - key: SESSION_COOKIE_NAME
         value: tg_session
-        scope: BUILD_AND_RUN_TIME
+        scope: RUN_TIME
 ```
 
 - [ ] **Step 2: Validate the spec**
@@ -904,11 +902,9 @@ jobs:
     name: Build (includes type check)
     runs-on: ubuntu-latest
     env:
-      # Placeholders so `next build` is deterministic in CI; real values are
-      # supplied by App Platform at deploy time.
+      # Placeholder so `next build` is deterministic in CI; the real value is
+      # supplied by App Platform at build time.
       API_ORIGIN: https://placeholder.invalid
-      JWT_SECRET: ci-placeholder-secret-0123456789
-      SESSION_COOKIE_NAME: tg_session
       NEXT_TELEMETRY_DISABLED: "1"
     steps:
       - uses: actions/checkout@v4
@@ -940,8 +936,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       API_ORIGIN: https://placeholder.invalid
-      JWT_SECRET: ci-placeholder-secret-0123456789
-      SESSION_COOKIE_NAME: tg_session
       NEXT_TELEMETRY_DISABLED: "1"
     steps:
       - uses: actions/checkout@v4
@@ -986,7 +980,7 @@ Replace the whole of `tg-ui/.env.production.example` with:
 API_ORIGIN=https://tg-api-xxxxx.ondigitalocean.app
 
 # MUST be identical to tg-api's JWT_SECRET so the Next middleware can verify
-# the session cookie.
+# the session cookie. Read at RUN time (not baked into the build).
 JWT_SECRET=${JWT_SECRET}
 
 # Must match tg-api's SESSION_COOKIE_NAME.
@@ -1253,8 +1247,8 @@ Expected: all green, image builds, working tree clean.
 
 ```bash
 cd /Users/satishreddy/Desktop/CurrentDevelopment/new/tg-ui
-API_ORIGIN=https://placeholder.invalid JWT_SECRET=ci-placeholder-secret-0123456789 npm run build \
-  && docker build -q --build-arg API_ORIGIN=http://localhost:4000 --build-arg JWT_SECRET=local-placeholder-secret-0123456789 -t tg-ui:local . \
+API_ORIGIN=https://placeholder.invalid npm run build \
+  && docker build -q --build-arg API_ORIGIN=http://localhost:4000 -t tg-ui:local . \
   && git status --short
 ```
 

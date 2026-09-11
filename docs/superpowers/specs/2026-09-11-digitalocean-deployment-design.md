@@ -82,10 +82,12 @@ config schema already reads `PORT`). Health check: `GET /health`.
 `next.config.mjs` gains `output: "standalone"`. Multi-stage:
 
 1. `deps`: `npm ci`.
-2. `build`: `npm run build` with `API_ORIGIN`, `JWT_SECRET`,
-   `SESSION_COOKIE_NAME` available as build args (App Platform passes
-   `BUILD_AND_RUN_TIME`-scoped envs to Docker builds as build args and the
-   Dockerfile declares them with `ARG`/`ENV`).
+2. `build`: `npm run build` with `API_ORIGIN` available as a build arg (App
+   Platform passes `BUILD_AND_RUN_TIME`-scoped envs to Docker builds as build
+   args and the Dockerfile declares it with `ARG`/`ENV`). `JWT_SECRET` and
+   `SESSION_COOKIE_NAME` are deliberately not build args: Next 14 middleware
+   reads them from the runtime environment (verified: the secret literal is
+   absent from the built image and a runtime-supplied secret is honoured).
 3. `runtime`: copy `.next/standalone`, `.next/static`, `public`;
    `USER node`; `CMD ["node", "server.js"]`. The standalone server honours
    `PORT` and `HOSTNAME=0.0.0.0`.
@@ -231,8 +233,8 @@ services:
       - { key: PORT, value: "3000" }
       - { key: HOSTNAME, value: 0.0.0.0 }
       - { key: API_ORIGIN, value: "${API_ORIGIN}", scope: BUILD_AND_RUN_TIME }
-      - { key: JWT_SECRET, value: "${JWT_SECRET}", type: SECRET, scope: BUILD_AND_RUN_TIME }
-      - { key: SESSION_COOKIE_NAME, value: tg_session, scope: BUILD_AND_RUN_TIME }
+      - { key: JWT_SECRET, value: "${JWT_SECRET}", type: SECRET, scope: RUN_TIME }
+      - { key: SESSION_COOKIE_NAME, value: tg_session, scope: RUN_TIME }
 ```
 
 `NEXT_PUBLIC_API_URL` stays unset so the browser uses the same-origin proxy.
@@ -243,8 +245,8 @@ services:
 
 - `actions/checkout`, `actions/setup-node@v4` (node 20, npm cache), `npm ci`.
 - tg-api: `npm run typecheck`, `npm test`, `npm run build`.
-- tg-ui: `npm run build` (with placeholder `API_ORIGIN` and `JWT_SECRET` so
-  the build is deterministic). `next build` already type-checks, so no
+- tg-ui: `npm run build` (with a placeholder `API_ORIGIN` so the build is
+  deterministic). `next build` already type-checks, so no
   separate `tsc` step.
 - Lint is **not** run: neither repo has an ESLint config, and the API's
   `lint` script has no eslint dependency. Adding lint is out of scope.
