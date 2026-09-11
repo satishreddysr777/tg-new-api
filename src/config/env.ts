@@ -36,6 +36,9 @@ const schema = Type.Object({
   DATABASE_URL: Type.String({ minLength: 1 }),
   // Max connections in the postgres-js pool.
   DB_POOL_MAX: Type.Number({ default: 10 }),
+  // PEM CA certificate of a managed Postgres cluster (DigitalOcean injects
+  // ${db.CA_CERT}). When set, TLS is verified against it. Empty = unchanged.
+  DATABASE_CA_CERT: Type.String({ default: "" }),
   // Secret used to sign JWT access tokens. MUST be overridden in production.
   JWT_SECRET: Type.String({
     minLength: 16,
