@@ -31,8 +31,8 @@ const schema = Type.Object({
   ),
   // Comma-separated list of allowed origins for CORS.
   CORS_ORIGINS: Type.String({ default: "http://localhost:3000" }),
-  // Postgres connection string. Required — no safe default. In production
-  // App Platform injects the Managed Postgres URL (${db.DATABASE_URL}).
+  // Postgres connection string. Required — no safe default. Supplied by the
+  // hosting platform's environment in production.
   DATABASE_URL: Type.String({ minLength: 1 }),
   // Max connections in the postgres-js pool.
   DB_POOL_MAX: Type.Number({ default: 10 }),
