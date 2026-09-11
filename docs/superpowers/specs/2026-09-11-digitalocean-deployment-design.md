@@ -243,8 +243,9 @@ services:
 
 - `actions/checkout`, `actions/setup-node@v4` (node 20, npm cache), `npm ci`.
 - tg-api: `npm run typecheck`, `npm test`, `npm run build`.
-- tg-ui: `npx tsc --noEmit`, `npm run build` (with placeholder `API_ORIGIN`
-  and `JWT_SECRET` so the build is deterministic).
+- tg-ui: `npm run build` (with placeholder `API_ORIGIN` and `JWT_SECRET` so
+  the build is deterministic). `next build` already type-checks, so no
+  separate `tsc` step.
 - Lint is **not** run: neither repo has an ESLint config, and the API's
   `lint` script has no eslint dependency. Adding lint is out of scope.
 
