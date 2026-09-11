@@ -1,0 +1,92 @@
+# DigitalOcean App Platform spec for tg-api.
+# Deployed by .github/workflows/deploy.yml via digitalocean/app_action/deploy@v2.
+# ${NAME} placeholders are filled from the workflow's env; ${db.*} bindables
+# are resolved by App Platform from the attached Managed Postgres cluster.
+name: tg-api
+region: nyc
+
+databases:
+  - name: db
+    engine: PG
+    production: true
+    cluster_name: tg-postgres
+    db_name: technograph
+    db_user: tg_api
+
+services:
+  - name: api
+    dockerfile_path: Dockerfile
+    source_dir: /
+    github:
+      repo: satishreddysr777/tg-new-api
+      branch: main
+      deploy_on_push: false
+    http_port: 8080
+    instance_size_slug: basic-xxs
+    instance_count: 1
+    health_check:
+      http_path: /health
+      initial_delay_seconds: 10
+      period_seconds: 10
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: "8080"
+      - key: LOG_LEVEL
+        value: info
+      - key: DATABASE_URL
+        value: ${db.DATABASE_URL}
+        type: SECRET
+      - key: DATABASE_CA_CERT
+        value: ${db.CA_CERT}
+        type: SECRET
+      - key: DB_POOL_MAX
+        value: "10"
+      - key: JWT_SECRET
+        value: ${JWT_SECRET}
+        type: SECRET
+      - key: JWT_ACCESS_TTL
+        value: 12h
+      - key: MFA_ENABLED
+        value: "false"
+      - key: SESSION_COOKIE_NAME
+        value: tg_session
+      - key: APP_URL
+        value: ${APP_URL}
+      - key: CORS_ORIGINS
+        value: ${CORS_ORIGINS}
+      - key: RESEND_API_KEY
+        value: ${RESEND_API_KEY}
+        type: SECRET
+      - key: MAIL_FROM
+        value: ${MAIL_FROM}
+
+jobs:
+  - name: migrate
+    kind: PRE_DEPLOY
+    dockerfile_path: Dockerfile
+    source_dir: /
+    github:
+      repo: satishreddysr777/tg-new-api
+      branch: main
+      deploy_on_push: false
+    run_command: node dist/db/migrate.js
+    instance_size_slug: basic-xxs
+    instance_count: 1
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: ${db.DATABASE_URL}
+        type: SECRET
+      - key: DATABASE_CA_CERT
+        value: ${db.CA_CERT}
+        type: SECRET
+      # config/env validates JWT_SECRET at import time (and rejects the dev
+      # default in production), so the job needs a real value too.
+      - key: JWT_SECRET
+        value: ${JWT_SECRET}
+        type: SECRET
