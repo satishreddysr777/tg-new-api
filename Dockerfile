@@ -14,7 +14,7 @@ RUN npm run build
 
 # ── 3. lean runtime image ────────────────────────────────────────────────────
 FROM node:20-alpine AS runtime
-ENV NODE_ENV=production
+ENV NODE_ENV=production PORT=8080
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
