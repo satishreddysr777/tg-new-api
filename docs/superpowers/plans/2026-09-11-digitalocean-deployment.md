@@ -711,7 +711,7 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 - Create: `tg-ui/Dockerfile`, `tg-ui/.dockerignore`
 
 **Interfaces:**
-- Produces: image that runs `node server.js` on `$PORT` (default 3000), built with build arg `API_ORIGIN` (the only build-time value; `JWT_SECRET` and `SESSION_COOKIE_NAME` are read by middleware at runtime — verified empirically). Task 8's spec references `dockerfile_path: Dockerfile`, passes `API_ORIGIN` as BUILD_AND_RUN_TIME and the other two as RUN_TIME.
+- Produces: image that runs `node server.js` on `$PORT` (default 3000), built with build arg `API_ORIGIN` (the only build-time value; `JWT_SECRET` and `SESSION_COOKIE_NAME` are read by middleware at runtime — verified empirically). Task 8's spec references `dockerfile_path: Dockerfile`, passes `API_ORIGIN` as RUN_AND_BUILD_TIME and the other two as RUN_TIME.
 
 - [ ] **Step 1: Enable standalone output**
 
@@ -862,11 +862,11 @@ services:
         value: "3000"
       - key: HOSTNAME
         value: 0.0.0.0
-      # BUILD_AND_RUN_TIME envs are passed to `docker build` as --build-arg.
+      # RUN_AND_BUILD_TIME envs are passed to `docker build` as --build-arg.
       # API_ORIGIN is baked into next.config rewrites at build time.
       - key: API_ORIGIN
         value: ${API_ORIGIN}
-        scope: BUILD_AND_RUN_TIME
+        scope: RUN_AND_BUILD_TIME
       # Read by middleware at runtime only — never needed during the build.
       - key: JWT_SECRET
         value: ${JWT_SECRET}

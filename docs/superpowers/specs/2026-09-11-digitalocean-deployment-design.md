@@ -83,7 +83,7 @@ config schema already reads `PORT`). Health check: `GET /health`.
 
 1. `deps`: `npm ci`.
 2. `build`: `npm run build` with `API_ORIGIN` available as a build arg (App
-   Platform passes `BUILD_AND_RUN_TIME`-scoped envs to Docker builds as build
+   Platform passes `RUN_AND_BUILD_TIME`-scoped envs to Docker builds as build
    args and the Dockerfile declares it with `ARG`/`ENV`). `JWT_SECRET` and
    `SESSION_COOKIE_NAME` are deliberately not build args: Next 14 middleware
    reads them from the runtime environment (verified: the secret literal is
@@ -232,7 +232,7 @@ services:
       - { key: NODE_ENV, value: production }
       - { key: PORT, value: "3000" }
       - { key: HOSTNAME, value: 0.0.0.0 }
-      - { key: API_ORIGIN, value: "${API_ORIGIN}", scope: BUILD_AND_RUN_TIME }
+      - { key: API_ORIGIN, value: "${API_ORIGIN}", scope: RUN_AND_BUILD_TIME }
       - { key: JWT_SECRET, value: "${JWT_SECRET}", type: SECRET, scope: RUN_TIME }
       - { key: SESSION_COOKIE_NAME, value: tg_session, scope: RUN_TIME }
 ```
