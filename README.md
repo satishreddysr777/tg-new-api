@@ -11,7 +11,7 @@ sign in, create account, 2-factor verification, and password reset.
 | Concern | Choice |
 |---|---|
 | HTTP framework | Fastify 5 (no NestJS) |
-| Database | Supabase Postgres via **Drizzle ORM** (`postgres-js` driver) |
+| Database | Postgres (DigitalOcean Managed) via **Drizzle ORM** (`postgres-js` driver) |
 | Validation & types | TypeBox via `@fastify/type-provider-typebox` (one schema = runtime validation + static types) |
 | Auth | `@fastify/jwt` (Bearer access tokens) + bcrypt password hashing |
 | Config | Env validated at boot with `env-schema` — invalid env → no start |
@@ -21,6 +21,11 @@ sign in, create account, 2-factor verification, and password reset.
 | Logging | pino (pretty in dev) |
 | Lifecycle | `close-with-grace` for graceful shutdown |
 | Tests | Vitest + `app.inject()` (no live socket needed) |
+
+## Deployment
+
+Runs on DigitalOcean App Platform with Managed Postgres, deployed by GitHub
+Actions on push to `main`. See [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ## Project layout
 
