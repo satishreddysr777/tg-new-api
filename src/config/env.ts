@@ -31,11 +31,14 @@ const schema = Type.Object({
   ),
   // Comma-separated list of allowed origins for CORS.
   CORS_ORIGINS: Type.String({ default: "http://localhost:3000" }),
-  // Supabase Postgres connection string. Required — no safe default.
-  // Use the connection-pooler URL (port 6543) for the app at runtime.
+  // Postgres connection string. Required — no safe default. Supplied by the
+  // hosting platform's environment in production.
   DATABASE_URL: Type.String({ minLength: 1 }),
   // Max connections in the postgres-js pool.
   DB_POOL_MAX: Type.Number({ default: 10 }),
+  // PEM CA certificate of a managed Postgres cluster (DigitalOcean injects
+  // ${db.CA_CERT}). When set, TLS is verified against it. Empty = unchanged.
+  DATABASE_CA_CERT: Type.String({ default: "" }),
   // Secret used to sign JWT access tokens. MUST be overridden in production.
   JWT_SECRET: Type.String({
     minLength: 16,

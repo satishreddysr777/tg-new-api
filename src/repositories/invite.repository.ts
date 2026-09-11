@@ -60,7 +60,7 @@ function mapRow(row: InviteRow): Invite {
   };
 }
 
-// ── Drizzle / Supabase (Postgres) ────────────────────────────────────────────
+// ── Drizzle / Postgres ────────────────────────────────────────────
 
 export class DrizzleInviteRepository implements InviteRepository {
   constructor(private readonly db: Database) {}

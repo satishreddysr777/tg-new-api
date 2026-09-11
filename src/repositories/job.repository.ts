@@ -72,7 +72,7 @@ function mapRow(row: JobRow): Job {
   };
 }
 
-// ── Drizzle / Supabase (Postgres) ────────────────────────────────────────────
+// ── Drizzle / Postgres ────────────────────────────────────────────
 
 export class DrizzleJobRepository implements JobRepository {
   constructor(private readonly db: Database) {}
