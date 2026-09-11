@@ -38,7 +38,7 @@ jobs:
           # Substituted into ${NAME} placeholders in .do/app.yaml.
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          APP_URL: ${{ vars.APP_URL }}
+          UI_URL: ${{ vars.UI_URL }}
           CORS_ORIGINS: ${{ vars.CORS_ORIGINS }}
           MAIL_FROM: ${{ vars.MAIL_FROM }}
         with:

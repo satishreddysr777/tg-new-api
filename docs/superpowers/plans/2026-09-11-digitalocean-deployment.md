@@ -474,7 +474,7 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 
 **Interfaces:**
 - Consumes: Dockerfile (Task 4), `node dist/db/migrate.js` (Task 3).
-- Produces: placeholders `${JWT_SECRET}`, `${RESEND_API_KEY}`, `${APP_URL}`, `${CORS_ORIGINS}`, `${MAIL_FROM}` that Task 6's deploy workflow must supply via `env:`.
+- Produces: placeholders `${JWT_SECRET}`, `${RESEND_API_KEY}`, `${UI_URL}`, `${CORS_ORIGINS}`, `${MAIL_FROM}` that Task 6's deploy workflow must supply via `env:`.
 
 - [ ] **Step 1: Write the spec**
 
@@ -538,7 +538,7 @@ services:
       - key: SESSION_COOKIE_NAME
         value: tg_session
       - key: APP_URL
-        value: ${APP_URL}
+        value: ${UI_URL}
       - key: CORS_ORIGINS
         value: ${CORS_ORIGINS}
       - key: RESEND_API_KEY
@@ -581,7 +581,7 @@ Run (in tg-api):
 
 ```bash
 sed -e 's/\${JWT_SECRET}/placeholder-secret-0123456789abcdef/' \
-    -e 's/\${RESEND_API_KEY}//' -e 's#\${APP_URL}#https://placeholder#' \
+    -e 's/\${RESEND_API_KEY}//' -e 's#\${UI_URL}#https://placeholder#' \
     -e 's#\${CORS_ORIGINS}#https://placeholder#' -e 's/\${MAIL_FROM}/x@y.z/' \
     .do/app.yaml > /tmp/tg-api-spec.yaml
 doctl apps spec validate /tmp/tg-api-spec.yaml
@@ -607,7 +607,7 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 - Create: `tg-api/.github/workflows/ci.yml`, `tg-api/.github/workflows/deploy.yml`
 
 **Interfaces:**
-- Consumes: spec placeholders from Task 5. GitHub secrets `DIGITALOCEAN_ACCESS_TOKEN`, `JWT_SECRET`, `RESEND_API_KEY`; variables `APP_URL`, `CORS_ORIGINS`, `MAIL_FROM` (set in Task 11).
+- Consumes: spec placeholders from Task 5. GitHub secrets `DIGITALOCEAN_ACCESS_TOKEN`, `JWT_SECRET`, `RESEND_API_KEY`; variables `UI_URL`, `CORS_ORIGINS`, `MAIL_FROM` (set in Task 11).
 
 - [ ] **Step 1: Create `ci.yml`**
 
@@ -677,7 +677,7 @@ jobs:
           # Substituted into ${NAME} placeholders in .do/app.yaml.
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          APP_URL: ${{ vars.APP_URL }}
+          UI_URL: ${{ vars.UI_URL }}
           CORS_ORIGINS: ${{ vars.CORS_ORIGINS }}
           MAIL_FROM: ${{ vars.MAIL_FROM }}
         with:
@@ -1088,8 +1088,8 @@ API repo:
 cd tg-api
 gh secret set DIGITALOCEAN_ACCESS_TOKEN      # paste the token from step 0.1
 gh secret set JWT_SECRET                     # the openssl value
-gh secret set RESEND_API_KEY --body ""       # or a real Resend key
-gh variable set APP_URL      --body "https://placeholder"
+# RESEND_API_KEY: skip unless you have a key (unset ⇒ empty ⇒ links are logged); to set one: gh secret set RESEND_API_KEY
+gh variable set UI_URL       --body "https://placeholder"
 gh variable set CORS_ORIGINS --body "https://placeholder"
 gh variable set MAIL_FROM    --body "Technograph <onboarding@your-domain.com>"
 ```
@@ -1170,13 +1170,14 @@ doctl apps list --format Spec.Name,DefaultIngress    # note the tg-ui URL
 
 ```bash
 cd tg-api
-gh variable set APP_URL      --body "https://tg-ui-xxxxx.ondigitalocean.app"
+gh variable set UI_URL       --body "https://tg-ui-xxxxx.ondigitalocean.app"
 gh variable set CORS_ORIGINS --body "https://tg-ui-xxxxx.ondigitalocean.app"
 gh workflow run deploy.yml
 ```
 
-`APP_URL` is what invite / reset magic links point at; `CORS_ORIGINS` is the
-allow-list for any direct browser → API calls.
+`APP_URL` is what invite / reset magic links point at (set via the `UI_URL`
+repo variable); `CORS_ORIGINS` is the allow-list for any direct browser → API
+calls.
 
 ## 7. Verify
 

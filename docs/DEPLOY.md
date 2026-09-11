@@ -50,14 +50,16 @@ DB_ID=$(doctl databases list --format ID,Name --no-header | awk '$2=="tg-postgre
 doctl databases db create   "$DB_ID" technograph
 doctl databases user create "$DB_ID" tg_api
 
-# Postgres 15+ no longer lets ordinary users create tables in `public`, and the
-# migrator also creates the `drizzle` schema. Grant both to tg_api once.
+# Postgres 15+ no longer lets ordinary users create objects in `public`, and
+# the migrator also creates the `drizzle` schema. Grant both to tg_api once
+# (doadmin owns the database it created, so GRANT always works; ALTER OWNER
+# would not).
 # (Works now because no trusted sources are configured yet; once the app is
 # attached, add your IP as in step 4 before running psql again.)
 ADMIN_URI=$(doctl databases connection "$DB_ID" --format URI --no-header | sed 's#/defaultdb#/technograph#')
 psql "$ADMIN_URI" -v ON_ERROR_STOP=1 \
   -c "GRANT ALL ON DATABASE technograph TO tg_api;" \
-  -c "ALTER SCHEMA public OWNER TO tg_api;"
+  -c "GRANT ALL ON SCHEMA public TO tg_api;"
 ```
 
 The app spec attaches the cluster by name (`cluster_name: tg-postgres`,
@@ -73,8 +75,8 @@ API repo:
 cd tg-api
 gh secret set DIGITALOCEAN_ACCESS_TOKEN      # paste the token from step 0.1
 gh secret set JWT_SECRET                     # the openssl value
-gh secret set RESEND_API_KEY --body ""       # or a real Resend key
-gh variable set APP_URL      --body "https://placeholder"
+# RESEND_API_KEY: skip unless you have a key (unset ⇒ empty ⇒ links are logged); to set one: gh secret set RESEND_API_KEY
+gh variable set UI_URL       --body "https://placeholder"
 gh variable set CORS_ORIGINS --body "https://placeholder"
 gh variable set MAIL_FROM    --body "Technograph <onboarding@your-domain.com>"
 ```
@@ -131,9 +133,10 @@ doctl databases firewalls remove "$DB_ID" --uuid <rule-uuid>
 ```
 
 `--data-only` inserts tables in dependency order and resets sequences. If the
-restore fails on a foreign-key cycle, insert `SET CONSTRAINTS ALL DEFERRED;`
-as the first line of `supabase-data.sql` and re-run. **Do not run `db:seed`**
-when copying data — the dump already contains the seeded tenant.
+restore ever fails on foreign-key ordering, re-run the `pg_dump` with
+`--disable-triggers` added (works because `tg_api` owns the tables) and
+restore again. **Do not run `db:seed`** when copying data — the dump already
+contains the seeded tenant.
 
 If you ever start from an empty database instead, seed once:
 
@@ -155,13 +158,14 @@ doctl apps list --format ID,Spec.Name,DefaultIngress    # note the tg-ui URL
 
 ```bash
 cd tg-api
-gh variable set APP_URL      --body "https://tg-ui-xxxxx.ondigitalocean.app"
+gh variable set UI_URL       --body "https://tg-ui-xxxxx.ondigitalocean.app"
 gh variable set CORS_ORIGINS --body "https://tg-ui-xxxxx.ondigitalocean.app"
 gh workflow run deploy.yml
 ```
 
-`APP_URL` is what invite / reset magic links point at; `CORS_ORIGINS` is the
-allow-list for any direct browser → API calls.
+`APP_URL` is what invite / reset magic links point at (set via the `UI_URL`
+repo variable); `CORS_ORIGINS` is the allow-list for any direct browser → API
+calls.
 
 ## 7. Verify
 

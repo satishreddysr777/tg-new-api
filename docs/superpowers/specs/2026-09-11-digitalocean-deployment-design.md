@@ -161,7 +161,7 @@ the demo tenant already present in the dump.
 Each repo carries `.do/app.yaml`. Secrets are never committed: the spec uses
 `${NAME}` placeholders which the deploy action expands from the GitHub
 Actions environment; DO stores values marked `type: SECRET` encrypted. DO's
-own bindables (`${db.DATABASE_URL}`, `${db.CA_CERT}`, `${APP_URL}`) are left
+own bindables (`${db.DATABASE_URL}`, `${db.CA_CERT}`) are left
 intact by the action.
 
 ### 5.1 tg-api/.do/app.yaml (shape)
@@ -192,7 +192,7 @@ services:
       - { key: DATABASE_CA_CERT, value: "${db.CA_CERT}", type: SECRET }
       - { key: JWT_SECRET, value: "${JWT_SECRET}", type: SECRET }
       - { key: RESEND_API_KEY, value: "${RESEND_API_KEY}", type: SECRET }
-      - { key: APP_URL, value: "${APP_URL}" }
+      - { key: APP_URL, value: "${UI_URL}" }
       - { key: CORS_ORIGINS, value: "${CORS_ORIGINS}" }
       - { key: MAIL_FROM, value: "${MAIL_FROM}" }
       - { key: MFA_ENABLED, value: "false" }
@@ -270,7 +270,7 @@ services:
 
 | Repo | Secrets | Variables |
 | --- | --- | --- |
-| tg-new-api | `DIGITALOCEAN_ACCESS_TOKEN`, `JWT_SECRET`, `RESEND_API_KEY` (may be empty) | `APP_URL`, `CORS_ORIGINS`, `MAIL_FROM` |
+| tg-new-api | `DIGITALOCEAN_ACCESS_TOKEN`, `JWT_SECRET`, `RESEND_API_KEY` (may be empty) | `UI_URL`, `CORS_ORIGINS`, `MAIL_FROM` |
 | tg-new-ui  | `DIGITALOCEAN_ACCESS_TOKEN`, `JWT_SECRET` | `API_ORIGIN` |
 
 The DO token needs read/write scope for apps and databases. The GitHub
@@ -284,14 +284,14 @@ App URLs are unknown until first deploy, so setup is two-pass:
 1. Create the Postgres cluster, database and user (§4.1). Attaching the
    cluster in the app spec adds the API app as a trusted source automatically.
 2. Generate `JWT_SECRET` once (`openssl rand -hex 32`); set it in both repos.
-3. Set API repo variables with placeholders (`APP_URL=https://placeholder`,
+3. Set API repo variables with placeholders (`UI_URL=https://placeholder`,
    `CORS_ORIGINS=https://placeholder`). Push `main` → API deploys, migrate
    job creates the schema. Note the API URL from the action output or
    `doctl apps list`.
 4. Copy data from Supabase (§4.3).
 5. Set UI repo variable `API_ORIGIN=<api url>`. Push `main` → UI deploys.
    Note the UI URL.
-6. Set API repo variables `APP_URL` and `CORS_ORIGINS` to the UI URL. Re-run
+6. Set API repo variables `UI_URL` and `CORS_ORIGINS` to the UI URL. Re-run
    the API deploy workflow (`workflow_dispatch`).
 7. Verify: `curl <api>/health`; open `<ui>` → `/login`; sign in; request a
    reset link and confirm it points at the UI URL.

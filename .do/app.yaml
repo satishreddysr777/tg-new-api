@@ -55,7 +55,7 @@ services:
       - key: SESSION_COOKIE_NAME
         value: tg_session
       - key: APP_URL
-        value: ${APP_URL}
+        value: ${UI_URL}
       - key: CORS_ORIGINS
         value: ${CORS_ORIGINS}
       - key: RESEND_API_KEY
