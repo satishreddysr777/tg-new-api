@@ -1,0 +1,48 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Never run two deploys of this app at once; queue instead of cancelling so a
+# queued deploy still ships the latest commit.
+concurrency:
+  group: deploy-tg-api
+  cancel-in-progress: false
+
+jobs:
+  checks:
+    name: Typecheck, test, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  deploy:
+    name: Deploy to DigitalOcean App Platform
+    needs: checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy tg-api
+        uses: digitalocean/app_action/deploy@v2
+        env:
+          # Substituted into ${NAME} placeholders in .do/app.yaml.
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          APP_URL: ${{ vars.APP_URL }}
+          CORS_ORIGINS: ${{ vars.CORS_ORIGINS }}
+          MAIL_FROM: ${{ vars.MAIL_FROM }}
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+          app_spec_location: .do/app.yaml
+          print_build_logs: true
+          print_deploy_logs: true
