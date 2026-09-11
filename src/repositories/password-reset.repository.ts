@@ -33,7 +33,7 @@ function mapRow(row: PasswordResetRow): PasswordReset {
   };
 }
 
-// ── Drizzle / Supabase (Postgres) ────────────────────────────────────────────
+// ── Drizzle / Postgres ────────────────────────────────────────────
 
 export class DrizzlePasswordResetRepository
   implements PasswordResetRepository

@@ -6,7 +6,7 @@ import type { EngagementHistory } from "../domain/engagement";
 
 /**
  * Append-only store of ended placements. The app depends only on this
- * interface, so the backing store (Drizzle/Supabase in prod, in-memory in
+ * interface, so the backing store (Drizzle/Postgres in prod, in-memory in
  * tests) is a swappable detail.
  */
 export interface CreateEngagementHistoryInput {
@@ -45,7 +45,7 @@ function mapRow(row: EngagementHistoryRow): EngagementHistory {
   };
 }
 
-// ── Drizzle / Supabase (Postgres) ────────────────────────────────────────────
+// ── Drizzle / Postgres ────────────────────────────────────────────
 
 export class DrizzleEngagementHistoryRepository
   implements EngagementHistoryRepository

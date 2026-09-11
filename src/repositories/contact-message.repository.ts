@@ -10,7 +10,7 @@ import type {
 /**
  * Contact-message store. The public form writes here; staff read and triage in
  * the Employer Console. As with the other repos, the backing store is a
- * swappable detail (Drizzle/Supabase in prod, in-memory in tests).
+ * swappable detail (Drizzle/Postgres in prod, in-memory in tests).
  */
 export interface CreateContactMessageInput {
   intent?: string | null;
@@ -47,7 +47,7 @@ function mapRow(row: ContactMessageRow): ContactMessage {
   };
 }
 
-// ── Drizzle / Supabase (Postgres) ────────────────────────────────────────────
+// ── Drizzle / Postgres ────────────────────────────────────────────
 
 export class DrizzleContactMessageRepository
   implements ContactMessageRepository

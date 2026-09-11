@@ -76,7 +76,7 @@ function mapRow(row: ApplicationRow): Application {
   };
 }
 
-// ── Drizzle / Supabase (Postgres) ────────────────────────────────────────────
+// ── Drizzle / Postgres ────────────────────────────────────────────
 
 export class DrizzleApplicationRepository implements ApplicationRepository {
   constructor(private readonly db: Database) {}

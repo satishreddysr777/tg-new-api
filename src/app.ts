@@ -77,7 +77,7 @@ const API_PREFIX = "/api/v1";
 export interface BuildAppOptions {
   /**
    * Override the stores. Tests inject in-memory repositories so they never
-   * touch a live database. Default to the Drizzle/Supabase-backed stores.
+   * touch a live database. Default to the Drizzle/Postgres-backed stores.
    */
   employeeRepository?: EmployeeRepository;
   clientRepository?: ClientRepository;

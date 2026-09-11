@@ -20,7 +20,7 @@ import {
 
 /**
  * Everything reads/writes through this one store: identity + auth lookups AND
- * the workforce directory. The backing store (Drizzle/Supabase in prod,
+ * the workforce directory. The backing store (Drizzle/Postgres in prod,
  * in-memory in tests) is a swappable detail.
  */
 export interface CreateEmployeeInput {
@@ -110,7 +110,7 @@ const withClient = (
   clientName: string | null,
 ): EmployeeWithClient => ({ ...toPublicEmployee(e), clientName });
 
-// ── Drizzle / Supabase (Postgres) ────────────────────────────────────────────
+// ── Drizzle / Postgres ────────────────────────────────────────────
 
 export class DrizzleEmployeeRepository implements EmployeeRepository {
   constructor(private readonly db: Database) {}

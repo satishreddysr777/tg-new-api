@@ -11,7 +11,7 @@ import type { Client } from "../domain/client";
 
 /**
  * Client-company store. The app depends only on this interface, so the backing
- * store (Drizzle/Supabase in prod, in-memory in tests) is a swappable detail.
+ * store (Drizzle/Postgres in prod, in-memory in tests) is a swappable detail.
  */
 export interface CreateClientInput {
   name: string;
@@ -44,7 +44,7 @@ function mapRow(row: ClientRow): Client {
   };
 }
 
-// ── Drizzle / Supabase (Postgres) ────────────────────────────────────────────
+// ── Drizzle / Postgres ────────────────────────────────────────────
 
 export class DrizzleClientRepository implements ClientRepository {
   constructor(private readonly db: Database) {}
