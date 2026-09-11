@@ -64,7 +64,7 @@ test/                       # vitest integration tests
 The **service layer is transport-agnostic** — it throws domain errors and
 receives the JWT signer by injection, so it has no dependency on Fastify or
 HTTP status codes. The **user repository is an interface** with two
-implementations: `DrizzleUserRepository` (Supabase Postgres) for runtime and
+implementations: `DrizzleUserRepository` (Postgres) for runtime and
 `InMemoryUserRepository` for tests. `buildApp({ userRepository })` injects the
 store, so tests never touch a live database.
 
@@ -72,15 +72,15 @@ store, so tests never touch a live database.
 
 ```bash
 npm install
-cp .env.example .env          # set DATABASE_URL to your Supabase connection string
+cp .env.example .env          # set DATABASE_URL to a local Postgres (or any Postgres you use for dev)
 
-npm run db:push               # create the schema in Supabase (or db:migrate)
+npm run db:push               # create the schema in your dev database (or db:migrate)
 npm run db:seed               # insert the demo employee
 
 npm run dev                   # http://localhost:4000  · docs at /docs
 ```
 
-### Database (Supabase + Drizzle)
+### Database (Postgres + Drizzle)
 
 The schema lives in [`src/db/schema.ts`](src/db/schema.ts). Workflow:
 
@@ -92,9 +92,9 @@ npm run db:studio     # browse data in Drizzle Studio
 npm run db:seed       # idempotent demo seed
 ```
 
-> Run migrations against the **direct** connection (port 5432). The app itself
-> uses the **transaction pooler** (port 6543, `prepare: false`) at runtime.
-> In non-production, `buildApp` also best-effort seeds the demo user on boot.
+> Run migrations against your Postgres instance directly (port 5432 by
+> default). In non-production, `buildApp` also best-effort seeds the demo
+> user on boot.
 
 Build & run:
 
@@ -142,6 +142,7 @@ curl -s localhost:4000/api/v1/auth/verify \
   after 5 attempts.
 - `JWT_SECRET` must be overridden in production or the process refuses to boot.
 
-> Users are persisted in Supabase Postgres via Drizzle. The 2FA **challenge**
+> Users are persisted in Postgres via Drizzle (DigitalOcean Managed Postgres
+> in production). The 2FA **challenge**
 > store is still in-memory (it's short-lived, TTL'd state) — back it with Redis
 > for multi-instance production deployments.

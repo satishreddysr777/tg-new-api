@@ -99,7 +99,7 @@ app, builds the Dockerfile, runs the `migrate` job (creating the schema), then
 starts the service. Get the URL:
 
 ```bash
-doctl apps list --format Spec.Name,DefaultIngress
+doctl apps list --format ID,Spec.Name,DefaultIngress
 curl https://tg-api-xxxxx.ondigitalocean.app/health   # {"status":"ok",...}
 ```
 
@@ -148,7 +148,7 @@ node dist/db/seed.js
 cd tg-ui
 gh variable set API_ORIGIN --body "https://tg-api-xxxxx.ondigitalocean.app"
 git push origin main
-doctl apps list --format Spec.Name,DefaultIngress    # note the tg-ui URL
+doctl apps list --format ID,Spec.Name,DefaultIngress    # note the tg-ui URL
 ```
 
 ## 6. Close the loop
