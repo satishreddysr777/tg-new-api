@@ -1,15 +1,12 @@
 import "dotenv/config";
 import { defineConfig } from "drizzle-kit";
 
-// Migrations run best against the DIRECT Supabase connection (port 5432), which
-// supports the advisory locks drizzle-kit uses. The app itself runs against the
-// transaction POOLER (6543). Prefer DIRECT_DATABASE_URL when set, falling back
-// to DATABASE_URL for local/dev where the two are the same.
-const url = process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
+// drizzle-kit is used locally for `db:generate`, `db:push` and `db:studio`.
+// Production migrations are applied by `node dist/db/migrate.js` (see
+// src/db/migrate.ts), which reads the same ./drizzle folder.
+const url = process.env.DATABASE_URL;
 if (!url) {
-  throw new Error(
-    "DIRECT_DATABASE_URL or DATABASE_URL is required for drizzle-kit operations.",
-  );
+  throw new Error("DATABASE_URL is required for drizzle-kit operations.");
 }
 
 export default defineConfig({
@@ -18,9 +15,7 @@ export default defineConfig({
   dialect: "postgresql",
   dbCredentials: { url },
   casing: "snake_case",
-  // This is a shared Supabase database — only manage our own `public` schema.
-  // Without this, drizzle-kit introspects Supabase's `auth`/`realtime` schemas
-  // and crashes parsing one of their CHECK constraints.
+  // Only manage our own `public` schema.
   schemaFilter: ["public"],
   verbose: true,
   strict: true,

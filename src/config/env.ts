@@ -31,8 +31,8 @@ const schema = Type.Object({
   ),
   // Comma-separated list of allowed origins for CORS.
   CORS_ORIGINS: Type.String({ default: "http://localhost:3000" }),
-  // Supabase Postgres connection string. Required — no safe default.
-  // Use the connection-pooler URL (port 6543) for the app at runtime.
+  // Postgres connection string. Required — no safe default. In production
+  // App Platform injects the Managed Postgres URL (${db.DATABASE_URL}).
   DATABASE_URL: Type.String({ minLength: 1 }),
   // Max connections in the postgres-js pool.
   DB_POOL_MAX: Type.Number({ default: 10 }),
