@@ -54,8 +54,8 @@ doctl databases user create "$DB_ID" tg_api
 # the migrator also creates the `drizzle` schema. Grant both to tg_api once
 # (doadmin owns the database it created, so GRANT always works; ALTER OWNER
 # would not).
-# (Works now because no trusted sources are configured yet; once the app is
-# attached, add your IP as in step 4 before running psql again.)
+# (Works now because the cluster has no firewall rules yet; after step 3 locks
+# it to the app, add your IP as in step 4 before running psql again.)
 ADMIN_URI=$(doctl databases connection "$DB_ID" --format URI --no-header | sed 's#/defaultdb#/technograph#')
 psql "$ADMIN_URI" -v ON_ERROR_STOP=1 \
   -c "GRANT ALL ON DATABASE technograph TO tg_api;" \
@@ -64,8 +64,17 @@ psql "$ADMIN_URI" -v ON_ERROR_STOP=1 \
 
 The app spec attaches the cluster by name (`cluster_name: tg-postgres`,
 `db_name: technograph`, `db_user: tg_api`) and App Platform injects
-`DATABASE_URL` and the CA certificate (`DATABASE_CA_CERT`) into the API. The
-API app is added to the cluster's trusted sources automatically on attach.
+`DATABASE_URL` and the CA certificate (`DATABASE_CA_CERT`) into the API.
+
+Attaching does **not** restrict who can connect: a new cluster with no
+firewall rules accepts every IP. After the first API deploy (step 3), lock it
+down to the app only:
+
+```bash
+APP_ID=$(doctl apps list --format ID,Spec.Name --no-header | awk '$2=="tg-api"{print $1}')
+doctl databases firewalls append "$DB_ID" --rule "app:${APP_ID}"
+doctl databases firewalls list "$DB_ID"     # expect one rule of type app
+```
 
 ## 2. GitHub secrets and variables
 
@@ -110,7 +119,7 @@ curl https://tg-api-xxxxx.ondigitalocean.app/health   # {"status":"ok",...}
 Run **after** step 3 so the schema and migration history already exist.
 
 ```bash
-# Attaching the app turned on trusted sources, so allow this machine temporarily.
+# The cluster is locked to the app (step 1), so allow this machine temporarily.
 MY_IP=$(curl -s https://api.ipify.org)
 doctl databases firewalls append "$DB_ID" --rule "ip_addr:${MY_IP}"
 
@@ -127,8 +136,8 @@ pg_dump "$SUPABASE_DIRECT_URL" --data-only --schema=public \
 psql "$DO_DATABASE_URL" --single-transaction -v ON_ERROR_STOP=1 -f supabase-data.sql
 rm supabase-data.sql
 
-# Remove the temporary firewall rule (find its UUID in the list output).
-doctl databases firewalls list "$DB_ID"
+# Remove the temporary firewall rule (the append command printed its UUID;
+# `doctl databases firewalls list "$DB_ID"` shows it too).
 doctl databases firewalls remove "$DB_ID" --uuid <rule-uuid>
 ```
 
