@@ -44,7 +44,7 @@ jobs:
         with:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
           app_spec_location: .do/app.yaml
-          # DigitalOcean project "Technograph Stage"
-          project_id: 0781d507-5d35-4050-abf4-45e94422f5eb
+          # DigitalOcean project to create the app in (secret, like the token)
+          project_id: ${{ secrets.DIGITALOCEAN_PROJECT_ID }}
           print_build_logs: true
           print_deploy_logs: true
