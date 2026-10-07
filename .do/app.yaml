@@ -5,6 +5,13 @@
 name: tg-api
 region: nyc
 
+# Custom domain. DNS zone is hosted on DigitalOcean, so App Platform creates
+# the record and issues the TLS certificate itself.
+domains:
+  - domain: api.technographinc.com
+    type: PRIMARY
+    zone: technographinc.com
+
 databases:
   - name: db
     engine: PG
