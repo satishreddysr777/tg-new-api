@@ -5,6 +5,13 @@
 name: tg-api
 region: nyc
 
+# Custom domain. DNS stays at GoDaddy: a CNAME for api points at this app's
+# default ondigitalocean.app hostname. App Platform issues the TLS
+# certificate once the CNAME resolves.
+domains:
+  - domain: api.technographinc.com
+    type: PRIMARY
+
 databases:
   - name: db
     engine: PG
